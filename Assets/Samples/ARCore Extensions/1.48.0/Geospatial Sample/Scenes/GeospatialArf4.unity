@@ -1896,11 +1896,13 @@ MonoBehaviour:
   - {fileID: 5895247704524623405, guid: 11e84bbbc8987fb4583db5c465d4e9ea, type: 3}
   - {fileID: 5895247704524623405, guid: 53568fedaae2ae04f9730952bee3ead1, type: 3}
   - {fileID: 5895247704524623405, guid: 0b0e14a07925b1e4e91c89d6a63c4285, type: 3}
+  - {fileID: 5895247704524623405, guid: 0b0e14a07925b1e4e91c89d6a63c4285, type: 3}
   objectPositions:
   - {x: 48.193024, y: 16.31308, z: 253.91}
   - {x: 48.193573, y: 16.312786, z: 264.4203}
   - {x: 48.19242, y: 16.31632, z: 253.91507}
   - {x: 48.193504, y: 16.312346, z: 264.4204}
+  - {x: 48.213398, y: 15.631351, z: 321.141}
   positionsText: {fileID: 2109944238}
   errorLogText: {fileID: 373480491}
   anchorManager: {fileID: 691323910}
@@ -4430,7 +4432,7 @@ MonoBehaviour:
   _showTilesInHierarchy: 0
   _updateInEditor: 1
   _logSelectionStats: 0
-  _createPhysicsMeshes: 0
+  _createPhysicsMeshes: 1
 --- !u!1 &1664493016
 GameObject:
   m_ObjectHideFlags: 0

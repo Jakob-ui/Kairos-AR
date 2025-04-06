@@ -196,7 +196,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
             }
 
             Debug.Log($"Anchor created for object {i + 1} at position: {anchor.transform.position}");
-            LogToErrorText($"Anchor created for object {i + 1} at position: {anchor.transform.position}", "success");
+            LogToErrorText($"Anchor created for object {i + 1}", "success");
             if (objectToPlace == null)
             {
                 Debug.LogError($"Prefab for object {i + 1} is not assigned.");
@@ -223,7 +223,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
             originalAnchorRotations[anchor] = placedObject.transform.localRotation;
 
             Debug.Log($"Object {i + 1} placed at: Lat={position.x}, Lon={position.z}, Alt={position.y}");
-            LogToErrorText($"Object {i + 1} placed at: Lat={position.x}, Lon={position.z}, Alt={position.y}", "success");
+            LogToErrorText($"Object {i + 1} placed ", "success");
         }
     }
 
