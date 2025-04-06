@@ -89,8 +89,6 @@ public class GeospatialObjectPlacer : MonoBehaviour
                 Debug.Log("Firebase initialized successfully!");
                 LogToErrorText("Firebase initialized successfully!", "success");
                 db = FirebaseFirestore.DefaultInstance;
-
-                StartCoroutine(WaitForARCoreInitialization());
             }
             else
             {
@@ -102,15 +100,13 @@ public class GeospatialObjectPlacer : MonoBehaviour
         StartCoroutine(DelayedStart());
     }
 
-    private IEnumerator DelayedStart()
+    private System.Collections.IEnumerator DelayedStart()
     {
         Debug.Log("Waiting for ARCore initialization...");
         LogToErrorText("Waiting for ARCore initialization...", "black");
+        yield return new WaitForSeconds(1.0f); // Wait 1 second for ARCore initialization
 
-        // Warte auf die ARCore-Initialisierung
-        yield return StartCoroutine(WaitForARCoreInitialization());
-
-        // Initialisiere Komponenten
+        // Initialize components
         earthManager = GetComponent<AREarthManager>();
         if (earthManager == null)
         {
@@ -266,20 +262,6 @@ public class GeospatialObjectPlacer : MonoBehaviour
         LogToErrorText("Script has been restarted.", "success");
     }
 
-    private IEnumerator WaitForARCoreInitialization()
-    {
-        while (earthManager.EarthState != EarthState.Enabled)
-        {
-            Debug.Log("Waiting for ARCore to initialize...");
-            LogToErrorText("Waiting for ARCore to initialize...", "warning");
-            yield return new WaitForSeconds(1.0f);
-        }
-
-        Debug.Log("ARCore initialized successfully!");
-        LogToErrorText("ARCore initialized successfully!", "success");
-        isEarthStateReady = true;
-    }
-
     public void OnGetPlacedObjectPositionsButtonClick()
     {
         if (placedAnchors.Count == 0)
@@ -288,12 +270,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
             LogToErrorText("No objects have been placed yet.", "warning");
             return;
         }
-        if (Camera.main == null)
-        {
-            Debug.LogError("Main camera is not found!");
-            LogToErrorText("Main camera is not found!", "error");
-            return;
-        }
+
         // Get the current position of the device
         var cameraPosition = Camera.main.transform.position;
 
