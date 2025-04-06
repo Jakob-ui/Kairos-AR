@@ -1463,7 +1463,7 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
         /// Generates the placed anchor failure string for the UI display.
         /// </summary>
         /// <returns> The string for the UI display for a failed anchor placement.</returns>
-         private string GetDisplayStringForAnchorPlacedFailure()
+        private string GetDisplayStringForAnchorPlacedFailure()
         {
             return string.Format(
                     "Failed to set a {0} anchor!", _anchorType);

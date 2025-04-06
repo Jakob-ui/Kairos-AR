@@ -1,147 +1,44 @@
 using UnityEngine;
 using Google.XR.ARCoreExtensions;
-using Google.XR.ARCoreExtensions.Samples.Geospatial;
-using UnityEngine.XR.ARFoundation;
-using System.Collections.Generic;
-using UnityEngine.UI;
-using TMPro;
-
-public class GeospatialObjectPlacer : MonoBehaviour
-{
-    public GameObject objectToPlace; // Das zu platzierende Objekt (Prefab)
-    public double latitude; // Geografische Breite
-    public double longitude; // Geografische Länge
-    public double altitude; // Höhe
-    public Text positionsText; // UI-Textfeld für die Ausgabe
-    public ARAnchorManager anchorManager; // ARAnchorManager
-    private AREarthManager earthManager; // AREarthManager
-
-    // Listen für die Datenerfassung
-    private List<Vector3> placedObjectPositions = new List<Vector3>();
-    private List<Vector3> desiredPositions = new List<Vector3>();
-
-    void Start()
-    {
-        // Initialisiere den EarthManager
-        earthManager = GetComponent<AREarthManager>();
-        if (anchorManager == null)
-        {
-            Debug.LogError("ARAnchorManager ist nicht zugewiesen!");
-            return;
-        }
-
-        if (earthManager == null)
-        {
-            Debug.LogError("AREarthManager ist nicht zugewiesen!");
-            return;
-        }
-
-        if (positionsText == null)
-        {
-            positionsText = GameObject.Find("Position Feedback").GetComponent<Text>();
-            if (positionsText == null)
-            {
-                Debug.LogError("Text-Element 'Feedback' konnte nicht gefunden werden!");
-            }
-        }
-
-        // Platziere das Objekt beim Start
-        PlaceObject();
-    }
-
-    void PlaceObject()
-    {
-        if (earthManager.EarthState == EarthState.Enabled)
-        {
-            var anchor = anchorManager.AddAnchor(latitude, longitude, altitude, Quaternion.identity);
-            if (anchor != null)
-            {
-                // Instanziere das Objekt und setze es als Kind des Anchors
-                var placedObject = Instantiate(objectToPlace, anchor.transform);
-                placedObject.transform.localPosition = Vector3.zero; // Nullt die lokale Position
-                placedObject.transform.localRotation = Quaternion.identity; // Nullt die lokale Rotation
-
-                // Speichere die gewünschte und tatsächliche Position
-                desiredPositions.Add(new Vector3((float)latitude, (float)altitude, (float)longitude));
-                placedObjectPositions.Add(anchor.transform.position);
-
-                Debug.Log($"Objekt platziert an: Lat={latitude}, Lon={longitude}, Alt={altitude}");
-            }
-            else
-            {
-                Debug.LogError("Fehler beim Erstellen des Geospatial Anchors.");
-            }
-        }
-        else
-        {
-            Debug.LogError("Earth State ist nicht aktiviert.");
-        }
-    }
-
-    // Methode, die beim Button-Klick aufgerufen wird
-    public void OnGetPlacedObjectPositionsButtonClick()
-    {
-        if (placedObjectPositions.Count == 0)
-        {
-            positionsText.text = "Es wurde noch kein Objekt platziert.";
-            Debug.LogError("Es wurde noch kein Objekt platziert.");
-            return;
-        }
-
-        // Hole die letzte platzierte Position
-        Vector3 lastPosition = placedObjectPositions[placedObjectPositions.Count - 1];
-        Quaternion lastRotation = objectToPlace.transform.rotation;
-
-        // Ausgabe der Informationen
-        positionsText.text = "Letztes platziertes Objekt:\n";
-        positionsText.text += $"Position (Lat, Lon, Alt): {lastPosition.x}, {lastPosition.z}, {lastPosition.y}\n";
-        positionsText.text += $"Rotation: {lastRotation.eulerAngles}\n";
-
-        Debug.Log($"Letztes Objekt: Position (Lat, Lon, Alt): {lastPosition.x}, {lastPosition.z}, {lastPosition.y}, Rotation: {lastRotation.eulerAngles}");
-    }
-}
-
-/*
-using UnityEngine;
-using Google.XR.ARCoreExtensions;
 using UnityEngine.XR.ARFoundation;
 using System.Collections.Generic;
 using UnityEngine.UI;
 
 public class GeospatialObjectPlacer : MonoBehaviour
 {
-    public GameObject objectToPlace; // Das zu platzierende Objekt (Prefab)
-    public double latitude; // Geografische Breite
-    public double longitude; // Geografische Länge
-    public double altitude; // Höhe
+    public List<GameObject> objectsToPlace; // Liste der zu platzierenden Objekte
+    public List<Vector3> objectPositions; // Liste der Positionen (Latitude, Longitude, Altitude)
     public Text positionsText; // UI-Textfeld für die Ausgabe
+    public Text errorLogText; // UI-Textfeld für Fehler-Logs
     public ARAnchorManager anchorManager; // ARAnchorManager
-    private AREarthManager earthManager; // AREarthManager
+    public AREarthManager earthManager; // AREarthManager
+
+    private List<ARGeospatialAnchor> placedAnchors = new List<ARGeospatialAnchor>();
 
     private bool isEarthStateReady = false; // Status, ob EarthState aktiviert ist
 
     void Start()
     {
-        Debug.Log("Starting GeospatialObjectPlacer...");
+        LogError("Starting GeospatialObjectPlacer...");
         StartCoroutine(DelayedStart());
     }
 
     private System.Collections.IEnumerator DelayedStart()
     {
-        Debug.Log("Waiting for ARCore initialization...");
+        LogError("Waiting for ARCore initialization...");
         yield return new WaitForSeconds(1.0f); // Wait 1 second for ARCore initialization
 
         // Initialize components
         earthManager = GetComponent<AREarthManager>();
         if (earthManager == null)
         {
-            LogToScreen("AREarthManager is not assigned!");
+            LogError("AREarthManager is not assigned!");
             yield break;
         }
 
         if (anchorManager == null)
         {
-            LogToScreen("ARAnchorManager is not assigned!");
+            LogError("ARAnchorManager is not assigned!");
             yield break;
         }
 
@@ -150,74 +47,138 @@ public class GeospatialObjectPlacer : MonoBehaviour
             positionsText = GameObject.Find("Position Feedback")?.GetComponent<Text>();
             if (positionsText == null)
             {
-                Debug.LogError("Text element 'Position Feedback' not found!");
+                LogError("Text element 'Position Feedback' not found!");
             }
         }
 
-        Debug.Log("Starting CheckEarthState...");
+        if (errorLogText == null)
+        {
+            errorLogText = GameObject.Find("Error Log")?.GetComponent<Text>();
+            if (errorLogText == null)
+            {
+                Debug.LogError("Text element 'Error Log' not found!");
+            }
+        }
+
+        LogError("Starting CheckEarthState...");
         StartCoroutine(CheckEarthState());
     }
 
     System.Collections.IEnumerator CheckEarthState()
     {
-        LogToScreen("Checking EarthState...");
+        LogError("Checking EarthState...");
         while (earthManager.EarthState != EarthState.Enabled)
         {
-            LogToScreen("EarthState is not yet enabled. Waiting...");
+            LogError("EarthState is not yet enabled. Waiting...");
             yield return new WaitForSeconds(1.0f); // Wait 1 second and check again
         }
 
-        LogToScreen("EarthState is enabled!");
+        LogError("EarthState is enabled!");
         isEarthStateReady = true;
 
-        // Place the object once EarthState is ready
-        PlaceObject();
+        // Place all objects once EarthState is ready
+        PlaceObjects();
     }
 
-    void PlaceObject()
+    void PlaceObjects()
     {
         if (!isEarthStateReady)
         {
-            LogToScreen("EarthState is not ready. Aborting.");
+            LogError("EarthState is not ready. Aborting.");
             return;
         }
 
-        LogToScreen("Placing object...");
-        var anchor = anchorManager.AddAnchor(latitude, longitude, altitude, Quaternion.identity);
-        if (anchor == null)
+        for (int i = 0; i < objectsToPlace.Count; i++)
         {
-            LogToScreen("Failed to create anchor. Check coordinates.");
-            return;
+            GameObject objectToPlace = objectsToPlace[i];
+            Vector3 position = objectPositions[i];
+
+            LogError($"Placing object {i + 1} at Lat={position.x}, Lon={position.y}, Alt={position.z}...");
+            var anchor = anchorManager.AddAnchor(position.x, position.y, position.z, Quaternion.identity) as ARGeospatialAnchor;
+            if (anchor == null)
+            {
+                LogError($"Failed to create anchor for object {i + 1}. Check coordinates.");
+                continue;
+            }
+
+            LogError($"Anchor created for object {i + 1} at position: {anchor.transform.position}");
+            if (objectToPlace == null)
+            {
+                LogError($"Prefab for object {i + 1} is not assigned.");
+                continue;
+            }
+
+            var placedObject = Instantiate(objectToPlace, anchor.transform);
+            if (placedObject == null)
+            {
+                LogError($"Failed to instantiate object {i + 1}.");
+                continue;
+            }
+
+            placedObject.transform.localPosition = Vector3.zero;
+            placedObject.transform.localRotation = Quaternion.identity;
+
+            // Store the anchor
+            placedAnchors.Add(anchor);
+            LogError($"Object {i + 1} placed at: Lat={position.x}, Lon={position.y}, Alt={position.z}");
         }
-
-        LogToScreen("Anchor created successfully.");
-        if (objectToPlace == null)
-        {
-            LogToScreen("Prefab 'objectToPlace' is not assigned.");
-            return;
-        }
-
-        var placedObject = Instantiate(objectToPlace, anchor.transform);
-        if (placedObject == null)
-        {
-            LogToScreen("Failed to instantiate the placed object.");
-            return;
-        }
-
-        placedObject.transform.localPosition = Vector3.zero;
-        placedObject.transform.localRotation = Quaternion.identity;
-
-        LogToScreen($"Object placed at: Lat={latitude}, Lon={longitude}, Alt={altitude}");
     }
 
-    private void LogToScreen(string message)
+    public void OnGetPlacedObjectPositionsButtonClick()
     {
-        if (positionsText != null)
+        if (placedAnchors.Count == 0)
         {
-            positionsText.text += message + "\n";
+            LogError("No objects have been placed yet.");
+            return;
         }
-        Debug.Log(message);
+
+        // Hole die aktuelle Position des Geräts
+        var cameraPosition = Camera.main.transform.position;
+
+        // Finde das nächstgelegene Objekt
+        float minDistance = float.MaxValue;
+        ARGeospatialAnchor closestAnchor = null;
+
+        foreach (var anchor in placedAnchors)
+        {
+            float distance = Vector3.Distance(cameraPosition, anchor.transform.position);
+            if (distance < minDistance)
+            {
+                minDistance = distance;
+                closestAnchor = anchor;
+            }
+        }
+
+        if (closestAnchor != null)
+        {
+            // Erstelle einen Pose aus der Position und Rotation des Ankers
+            Pose anchorPose = new Pose(closestAnchor.transform.position, closestAnchor.transform.rotation);
+
+            // Abrufen der geographischen Koordinaten
+            var geospatialPose = earthManager.Convert(anchorPose);
+
+            // Ausgabe der Koordinaten des nächstgelegenen Objekts
+            positionsText.text = "Closest object:\n";
+            positionsText.text += $"Latitude: {geospatialPose.Latitude}\n";
+            positionsText.text += $"Longitude: {geospatialPose.Longitude}\n";
+            positionsText.text += $"Altitude: {geospatialPose.Altitude}\n";
+            positionsText.text += $"Distance: {minDistance:F2} meters\n";
+
+            Debug.Log($"Closest object: Latitude={geospatialPose.Latitude}, Longitude={geospatialPose.Longitude}, Altitude={geospatialPose.Altitude}, Distance={minDistance:F2} meters");
+        }
+        else
+        {
+            positionsText.text = "No closest object found.";
+            Debug.LogError("No closest object found.");
+        }
+    }
+
+    private void LogError(string message)
+    {
+        if (errorLogText != null)
+        {
+            errorLogText.text += message + "\n";
+        }
+        Debug.LogError(message);
     }
 }
-
-*/
