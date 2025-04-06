@@ -12,6 +12,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-firestore:25.1.3' // Assets/Firebase/Editor/FirestoreDependencies.xml:13
     implementation 'com.google.firebase:firebase-firestore-unity:12.8.0' // Assets/Firebase/Editor/FirestoreDependencies.xml:20
 // Android Resolver Dependencies End
+    implementation 'com.google.android.gms:play-services-location:21.0.1'
 **DEPS**}
 
 // Android Resolver Exclusions Start
