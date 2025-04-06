@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "108293255292",
+    "project_id": "ar-paicture-place",
+    "storage_bucket": "ar-paicture-place.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:108293255292:android:82d1bbb8ef1c343aaa99f9",
+        "android_client_info": {
+          "package_name": "com.jakob.v4arcoreding"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAvLmL6k2RHY0ujGCmPjTaCany8TQ6NqDw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
