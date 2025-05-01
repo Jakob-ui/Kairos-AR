@@ -339,12 +339,12 @@ public class GeospatialObjectPlacer : MonoBehaviour
 
                 // Calculate the difference in accuracy
                 // Calculate the difference in accuracy
-                float positionAccuracy = Vector3.Distance(originalPosition, new Vector3((float)geospatialPose.Latitude, (float)geospatialPose.Altitude, (float)geospatialPose.Longitude));
+                float positionAccuracy = Vector3.Distance(originalPosition, new Vector3((float)geospatialPose.Latitude, (float)geospatialPose.Longitude, (float)geospatialPose.Altitude));
                 float rotationAccuracy = Quaternion.Angle(originalRotation, currentRotation);
 
                 // Display the original and current positions, rotations, and the accuracy difference
                 positionsText.text = $"Closest object: {prefabName}\n";
-                positionsText.text += $"Original Position: Lat={originalPosition.x}, Lon={originalPosition.z}, Alt={originalPosition.y}\n";
+                positionsText.text += $"Original Position: Lat={originalPosition.x}, Lon={originalPosition.y}, Alt={originalPosition.z}\n";
                 positionsText.text += $"Current Position: Lat={geospatialPose.Latitude}, Lon={geospatialPose.Longitude}, Alt={geospatialPose.Altitude}\n";
                 positionsText.text += $"Original Rotation (Eun): {originalRotation.eulerAngles}\n";
                 positionsText.text += $"Current Rotation (Eun): {currentRotation.eulerAngles}\n";
