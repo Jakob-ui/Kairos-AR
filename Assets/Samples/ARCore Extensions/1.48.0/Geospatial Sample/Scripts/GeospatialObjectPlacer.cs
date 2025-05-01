@@ -12,17 +12,19 @@ using System.Collections;
 
 public class GeospatialObjectPlacer : MonoBehaviour
 {
-    public List<GameObject> objectsToPlace; // List of objects to place
-    public List<Vector3> objectPositions; // List of positions (Latitude, Longitude, Altitude)
-    public Text positionsText; // UI text for position feedback
-    public Text errorLogText; // UI text for error logs
-    public ARAnchorManager anchorManager; // ARAnchorManager
-    public AREarthManager earthManager; // AREarthManager
+    public List<GameObject> objectsToPlace;
+    public List<Vector3> objectPositions;
+    public List<Quaternion> objectRotations = new List<Quaternion>();
+    public Text positionsText;
+    public Text errorLogText;
+    public ARAnchorManager anchorManager;
+    public AREarthManager earthManager; 
     private Dictionary<ARGeospatialAnchor, Vector3> originalAnchorPositions = new Dictionary<ARGeospatialAnchor, Vector3>();
     private Dictionary<ARGeospatialAnchor, Quaternion> originalAnchorRotations = new Dictionary<ARGeospatialAnchor, Quaternion>();
-    private FirebaseFirestore db; // Firestore instance
+    private FirebaseFirestore db;
     private List<ARGeospatialAnchor> placedAnchors = new List<ARGeospatialAnchor>();
-    private bool isEarthStateReady = false; // Status of EarthState readiness
+    private bool isEarthStateReady = false;
+    string databaseSaving;
 
     void Start()
     {
@@ -51,11 +53,12 @@ public class GeospatialObjectPlacer : MonoBehaviour
             StartCoroutine(WaitForPermissions());
             return;
         }
+        databaseSaving = "android-placed-objects";
 #elif UNITY_IOS
     // On iOS, permissions must be declared in Info.plist and are requested automatically
     Debug.Log("Ensure permissions are declared in Info.plist.");
     LogToErrorText("Ensure permissions are declared in Info.plist.", "black");
-
+    databaseSaving = "ios-placed-objects"
 #endif
 
         InitializeApp();
@@ -81,7 +84,6 @@ public class GeospatialObjectPlacer : MonoBehaviour
         Debug.Log("Initializing app...");
         LogToErrorText("Initializing app...", "black");
 
-        // Initialize Firebase
         FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
         {
             if (task.Result == DependencyStatus.Available)
@@ -107,10 +109,8 @@ public class GeospatialObjectPlacer : MonoBehaviour
         Debug.Log("Waiting for ARCore initialization...");
         LogToErrorText("Waiting for ARCore initialization...", "black");
 
-        // Warte auf die ARCore-Initialisierung
         yield return StartCoroutine(WaitForARCoreInitialization());
 
-        // Initialisiere Komponenten
         earthManager = GetComponent<AREarthManager>();
         if (earthManager == null)
         {
@@ -183,11 +183,13 @@ public class GeospatialObjectPlacer : MonoBehaviour
         {
             GameObject objectToPlace = objectsToPlace[i];
             Vector3 position = objectPositions[i];
+            Quaternion rotation = objectRotations[i];
 
 
-            Debug.Log($"Placing object {i + 1} at Lat={position.x}, Lon={position.z}, Alt={position.y}...");
-            LogToErrorText($"Placing object {i + 1} at Lat={position.x}, Lon={position.z}, Alt={position.y}...", "success");
-            var anchor = anchorManager.AddAnchor(position.x, position.z, position.y, Quaternion.identity) as ARGeospatialAnchor;
+            Debug.Log($"Placing object {i + 1} at Lat={position.x}, Lon={position.y}, Alt={position.z}...");
+            LogToErrorText($"Placing object {i + 1} at Lat={position.x}, Lon={position.y}, Alt={position.z}...", "success");
+
+            var anchor = anchorManager.AddAnchor(position.x, position.y, position.z, rotation) as ARGeospatialAnchor;
             if (anchor == null)
             {
                 Debug.LogError($"Failed to create anchor for object {i + 1}. Check coordinates.");
@@ -215,19 +217,23 @@ public class GeospatialObjectPlacer : MonoBehaviour
             placedObject.transform.localRotation = Quaternion.identity;
             placedObject.transform.localPosition = Vector3.zero;
 
-            // Store the anchor
             placedAnchors.Add(anchor);
 
-            // Store the original position and rotation of the anchor
             originalAnchorPositions[anchor] = position;
-            originalAnchorRotations[anchor] = placedObject.transform.localRotation;
 
+            // Extrahiere die GeospatialPose und speichere die EunRotation
             Pose anchorPose = new Pose(anchor.transform.position, anchor.transform.rotation);
             var geospatialPose = earthManager.Convert(anchorPose);
+            Quaternion eunRotation = geospatialPose.EunRotation;
 
-            Debug.Log($"Object {i + 1} placed at: Lat={position.x}, Lon={position.z}, Alt={position.y}");
-            Debug.Log($"GeospatialPose.EunRotation: {geospatialPose.EunRotation}");
-            LogToErrorText($"Object {i + 1} placed with GeospatialPose.EunRotation: {geospatialPose.EunRotation}", "success");
+            originalAnchorRotations[anchor] = eunRotation; // Speichere die EunRotation
+            objectRotations[i] = eunRotation; // Aktualisiere die Rotation in der Liste
+            Debug.Log($"Saved original rotation for anchor: {eunRotation.eulerAngles}");
+
+            Debug.Log($"Object {i + 1} placed at: Lat={position.x}, Lon={position.y}, Alt={position.z}");
+            Debug.Log($"Extracted EunRotation: {eunRotation.eulerAngles}");
+            LogToErrorText($"Object {i + 1} placed at: Lat={position.x}, Lon={position.y}, Alt={position.z}", "success");
+            LogToErrorText($"Object {i + 1} Extracted EunRotation: {eunRotation.eulerAngles}", "success");
         }
     }
 
@@ -332,18 +338,18 @@ public class GeospatialObjectPlacer : MonoBehaviour
                 Quaternion currentRotation = geospatialPose.EunRotation;
 
                 // Calculate the difference in accuracy
+                // Calculate the difference in accuracy
                 float positionAccuracy = Vector3.Distance(originalPosition, new Vector3((float)geospatialPose.Latitude, (float)geospatialPose.Altitude, (float)geospatialPose.Longitude));
-
                 float rotationAccuracy = Quaternion.Angle(originalRotation, currentRotation);
-                positionsText.text += $"Rotation Difference: {rotationAccuracy:F2} degrees\n";
 
                 // Display the original and current positions, rotations, and the accuracy difference
                 positionsText.text = $"Closest object: {prefabName}\n";
                 positionsText.text += $"Original Position: Lat={originalPosition.x}, Lon={originalPosition.z}, Alt={originalPosition.y}\n";
                 positionsText.text += $"Current Position: Lat={geospatialPose.Latitude}, Lon={geospatialPose.Longitude}, Alt={geospatialPose.Altitude}\n";
-                positionsText.text += $"Original Rotation: {originalRotation.eulerAngles}\n";
-                positionsText.text += $"Current Rotation: {currentRotation.eulerAngles}\n";
+                positionsText.text += $"Original Rotation (Eun): {originalRotation.eulerAngles}\n";
+                positionsText.text += $"Current Rotation (Eun): {currentRotation.eulerAngles}\n";
                 positionsText.text += $"Accuracy Difference: {positionAccuracy:F2} meters\n";
+                positionsText.text += $"Rotation Difference: {rotationAccuracy:F2} degrees\n";
 
                 // Save both original and current positions and rotations to Firestore
                 SaveObjectPosition(prefabName, originalPosition, new Vector3((float)geospatialPose.Latitude, (float)geospatialPose.Altitude, (float)geospatialPose.Longitude), positionAccuracy, rotationAccuracy, originalRotation, currentRotation);
@@ -352,6 +358,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
             {
                 Debug.LogError("Original position or rotation of the closest anchor not found.");
                 LogToErrorText("Original position or rotation of the closest anchor not found.", "error");
+                originalRotation = Quaternion.identity;
             }
         }
     }
@@ -366,7 +373,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
         }
 
         // Reference to the Firestore collection
-        var docRef = db.Collection("android-placed-objects").Document(objectName);
+        var docRef = db.Collection(databaseSaving).Document(objectName);
 
         // Data to save
         Dictionary<string, object> data = new Dictionary<string, object>
@@ -374,12 +381,13 @@ public class GeospatialObjectPlacer : MonoBehaviour
             { "name", objectName },
             { "timestamp", FieldValue.ServerTimestamp },
             { "original-latitude", originalPosition.x },
-            { "original-longitude", originalPosition.z },
-            { "original-altitude", originalPosition.y },
+            { "original-longitude", originalPosition.y },
+            { "original-altitude", originalPosition.z },
             { "current-latitude", currentPosition.x },
             { "current-longitude", currentPosition.z },
             { "current-altitude", currentPosition.y },
-            { "accuracy", positionAcc },
+            { "position-accuracy", positionAcc },
+            { "rotation-accuracy", rotationAcc },
             { "original-rotation-x", originalRotation.eulerAngles.x },
             { "original-rotation-y", originalRotation.eulerAngles.y },
             { "original-rotation-z", originalRotation.eulerAngles.z },
