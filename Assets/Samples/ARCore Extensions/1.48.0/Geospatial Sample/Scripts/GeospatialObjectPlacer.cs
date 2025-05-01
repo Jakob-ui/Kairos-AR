@@ -222,8 +222,12 @@ public class GeospatialObjectPlacer : MonoBehaviour
             originalAnchorPositions[anchor] = position;
             originalAnchorRotations[anchor] = placedObject.transform.localRotation;
 
+            Pose anchorPose = new Pose(anchor.transform.position, anchor.transform.rotation);
+            var geospatialPose = earthManager.Convert(anchorPose);
+
             Debug.Log($"Object {i + 1} placed at: Lat={position.x}, Lon={position.z}, Alt={position.y}");
-            LogToErrorText($"Object {i + 1} placed ", "success");
+            Debug.Log($"GeospatialPose.EunRotation: {geospatialPose.EunRotation}");
+            LogToErrorText($"Object {i + 1} placed with GeospatialPose.EunRotation: {geospatialPose.EunRotation}", "success");
         }
     }
 
@@ -325,7 +329,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
                 string prefabName = closestAnchor.transform.GetChild(0).gameObject.name + "_" + DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
 
                 // Get the current rotation of the placed object
-                Quaternion currentRotation = closestAnchor.transform.GetChild(0).localRotation;
+                Quaternion currentRotation = geospatialPose.EunRotation;
 
                 // Calculate the difference in accuracy
                 float positionAccuracy = Vector3.Distance(originalPosition, new Vector3((float)geospatialPose.Latitude, (float)geospatialPose.Altitude, (float)geospatialPose.Longitude));
