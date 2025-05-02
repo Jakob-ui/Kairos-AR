@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,8 +9,11 @@ public class StartMenu : MonoBehaviour
     public GameObject startScreenPanel;
     public Button startButton;
     public Toggle startCheckbox;
+    public TMP_Dropdown Dropdown;
     public GameObject InfoPanel;
     public GameObject SnackBar;
+    public string selectedDatabase;
+    public GeospatialObjectPlacer geospatialObjectPlacer;
 
     private void Start()
     {
@@ -36,5 +40,32 @@ public class StartMenu : MonoBehaviour
             SnackBar.SetActive(false);
         }
         startScreenPanel.SetActive(false);
+    }
+    private void OnDropdownValueChanged(int index)
+    {
+        // Setze den Wert basierend auf der Dropdown-Auswahl
+        switch (index)
+        {
+            case 0:
+                selectedDatabase = "ar-pictures-Prater";
+                break;
+            case 1:
+                selectedDatabase = "ar-pictures-SchlossSchönbrunn";
+                break;
+            case 2:
+                selectedDatabase = "ar-pictures-Museum";
+                break;
+            default:
+                selectedDatabase = "unknown";
+                break;
+        }
+
+        Debug.Log($"Selected database: {selectedDatabase}");
+
+        // Übergabe an den GeospatialObjectPlacer
+        if (geospatialObjectPlacer != null)
+        {
+            geospatialObjectPlacer.SetSelectedDatabase(selectedDatabase);
+        }
     }
 }
