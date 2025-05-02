@@ -20,6 +20,7 @@ public class StartMenu : MonoBehaviour
 
         // Button-Listener hinzufügen
         startButton.onClick.AddListener(OnStartButtonClicked);
+        Dropdown.onValueChanged.AddListener(OnDropdownValueChanged);
     }
 
     public void OnStartButtonClicked()
@@ -47,16 +48,16 @@ public class StartMenu : MonoBehaviour
         switch (index)
         {
             case 0:
-                selectedDatabase = "ar-pictures-Prater";
+                selectedDatabase = "ar-pictures-Wien";
                 break;
             case 1:
                 selectedDatabase = "ar-pictures-SchlossSchönbrunn";
                 break;
             case 2:
-                selectedDatabase = "ar-pictures-Museum";
+                selectedDatabase = "ar-pictures-fhstp";
                 break;
             default:
-                selectedDatabase = "unknown";
+                selectedDatabase = "ar-pictures-Wien";
                 break;
         }
 
@@ -67,5 +68,9 @@ public class StartMenu : MonoBehaviour
         {
             geospatialObjectPlacer.SetSelectedDatabase(selectedDatabase);
         }
+    }
+    public void GetSelectedDatabase(string database)
+    {
+        selectedDatabase = database;
     }
 }
