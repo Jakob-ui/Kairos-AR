@@ -25,6 +25,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
     private List<ARGeospatialAnchor> placedAnchors = new List<ARGeospatialAnchor>();
     private bool isEarthStateReady = false;
     string databaseSaving;
+    string selectedDatabase;
 
     void Start()
     {
@@ -77,6 +78,12 @@ public class GeospatialObjectPlacer : MonoBehaviour
         LogToErrorText("Permissions granted!", "success");
         Debug.Log("Permissions granted!");
         InitializeApp();
+    }
+
+    public void SetSelectedDatabase(string database)
+    {
+        selectedDatabase = database;
+        LogToErrorText($"Selected Database set to: {selectedDatabase}", "success");
     }
 
     private void InitializeApp()
