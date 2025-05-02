@@ -22,18 +22,21 @@ public class GeospatialObjectPlacer : MonoBehaviour
     private Dictionary<ARGeospatialAnchor, Vector3> originalAnchorPositions = new Dictionary<ARGeospatialAnchor, Vector3>();
     private Dictionary<ARGeospatialAnchor, Quaternion> originalAnchorRotations = new Dictionary<ARGeospatialAnchor, Quaternion>();
     private FirebaseFirestore db;
+    public StartMenu StartMenu;
     private List<ARGeospatialAnchor> placedAnchors = new List<ARGeospatialAnchor>();
     private bool isEarthStateReady = false;
     string databaseSaving;
-    string selectedDatabase;
+    string selectedDatabase = "nicht gewählt";
 
     void Start()
     {
         Debug.Log("Starting GeospatialObjectPlacer...");
         Debug.Log($"Starting GeospatialObjectPlacer on platform: {Application.platform}");
         LogToErrorText("Starting GeospatialObjectPlacer...", "success");
+        StartMenu.GetSelectedDatabase(selectedDatabase);
+        LogToErrorText($"Selected Database: {selectedDatabase}", "black");
         LogToErrorText($"Starting GeospatialObjectPlacer on platform: {Application.platform}", "black");
-
+       
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             Debug.Log("Running on iOS.");
@@ -83,7 +86,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
     public void SetSelectedDatabase(string database)
     {
         selectedDatabase = database;
-        LogToErrorText($"Selected Database set to: {selectedDatabase}", "success");
+        LogToErrorText($"Selected Database set to: {selectedDatabase}", "black");
     }
 
     private void InitializeApp()
@@ -248,6 +251,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
     {
         Debug.Log("Reset button clicked. Restarting the script...");
         LogToErrorText("Reset button clicked. Restarting the script...", "black");
+        LogToErrorText($"Selected Database: {selectedDatabase}", "black");
 
         // Remove all placed anchors
         foreach (var anchor in placedAnchors)
