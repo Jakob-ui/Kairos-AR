@@ -32,10 +32,10 @@ public class GeospatialObjectPlacer : MonoBehaviour
     {
         Debug.Log("Starting GeospatialObjectPlacer...");
         Debug.Log($"Starting GeospatialObjectPlacer on platform: {Application.platform}");
-        LogToErrorText("Starting GeospatialObjectPlacer...", "success");
+        ErrorLogger.LogToErrorText("Starting GeospatialObjectPlacer...", "success", errorLogText);
         StartMenu.GetSelectedDatabase(selectedDatabase);
-        LogToErrorText($"Selected Database: {selectedDatabase}", "black");
-        LogToErrorText($"Starting GeospatialObjectPlacer on platform: {Application.platform}", "black");
+        ErrorLogger.LogToErrorText($"Selected Database: {selectedDatabase}", "black", errorLogText);
+        ErrorLogger.LogToErrorText($"Starting GeospatialObjectPlacer on platform: {Application.platform}", "black", errorLogText);
        
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
@@ -51,7 +51,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
             !Permission.HasUserAuthorizedPermission(Permission.FineLocation))
         {
             Debug.Log("Requesting permissions...");
-            LogToErrorText("Requesting permissions...", "black");
+            ErrorLogger.LogToErrorText("Requesting permissions...", "black", errorLogText);
             Permission.RequestUserPermission(Permission.Camera);
             Permission.RequestUserPermission(Permission.FineLocation);
             StartCoroutine(WaitForPermissions());
@@ -61,7 +61,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
 #elif UNITY_IOS
     // On iOS, permissions must be declared in Info.plist and are requested automatically
     Debug.Log("Ensure permissions are declared in Info.plist.");
-    LogToErrorText("Ensure permissions are declared in Info.plist.", "black");
+    ErrorLogger.LogToErrorText("Ensure permissions are declared in Info.plist.", "black", errorLogText);
     databaseSaving = "ios-placed-objects"
 #endif
 
@@ -73,12 +73,12 @@ public class GeospatialObjectPlacer : MonoBehaviour
         while (!Permission.HasUserAuthorizedPermission(Permission.Camera) ||
                !Permission.HasUserAuthorizedPermission(Permission.FineLocation))
         {
-            LogToErrorText("Waiting for permissions...", "black");
+            ErrorLogger.LogToErrorText("Waiting for permissions...", "black", errorLogText);
             Debug.Log("Waiting for permissions...");
             yield return null;
         }
 
-        LogToErrorText("Permissions granted!", "success");
+        ErrorLogger.LogToErrorText("Permissions granted!", "success", errorLogText);
         Debug.Log("Permissions granted!");
         InitializeApp();
     }
@@ -86,20 +86,20 @@ public class GeospatialObjectPlacer : MonoBehaviour
     public void SetSelectedDatabase(string database)
     {
         selectedDatabase = database;
-        LogToErrorText($"Selected Database set to: {selectedDatabase}", "black");
+        ErrorLogger.LogToErrorText($"Selected Database set to: {selectedDatabase}", "black", errorLogText);
     }
 
     private void InitializeApp()
     {
         Debug.Log("Initializing app...");
-        LogToErrorText("Initializing app...", "black");
+        ErrorLogger.LogToErrorText("Initializing app...", "black", errorLogText);
 
         FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
         {
             if (task.Result == DependencyStatus.Available)
             {
                 Debug.Log("Firebase initialized successfully!");
-                LogToErrorText("Firebase initialized successfully!", "success");
+                ErrorLogger.LogToErrorText("Firebase initialized successfully!", "success", errorLogText);
                 db = FirebaseFirestore.DefaultInstance;
 
                 StartCoroutine(WaitForARCoreInitialization());
@@ -107,7 +107,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
             else
             {
                 Debug.LogError($"Could not resolve all Firebase dependencies: {task.Result}");
-                LogToErrorText($"Could not resolve all Firebase dependencies: {task.Result}", "error");
+                ErrorLogger.LogToErrorText($"Could not resolve all Firebase dependencies: {task.Result}", "error", errorLogText);
             }
         });
 
@@ -117,7 +117,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
     private IEnumerator DelayedStart()
     {
         Debug.Log("Waiting for ARCore initialization...");
-        LogToErrorText("Waiting for ARCore initialization...", "black");
+        ErrorLogger.LogToErrorText("Waiting for ARCore initialization...", "black", errorLogText);
 
         yield return StartCoroutine(WaitForARCoreInitialization());
 
@@ -125,7 +125,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
         if (earthManager == null)
         {
             Debug.LogError("AREarthManager is not assigned!");
-            LogToErrorText("AREarthManager is not assigned!", "error");
+            ErrorLogger.LogToErrorText("AREarthManager is not assigned!", "error", errorLogText);
             yield break;
         }
 
@@ -133,7 +133,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
         if (anchorManager == null)
         {
             Debug.LogError("ARAnchorManager is not assigned!");
-            LogToErrorText("ARAnchorManager is not assigned!", "error");
+            ErrorLogger.LogToErrorText("ARAnchorManager is not assigned!", "error", errorLogText);
             yield break;
         }
 
@@ -143,7 +143,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
             if (positionsText == null)
             {
                 Debug.LogError("Text element 'Position Feedback' not found!");
-                LogToErrorText("Text element 'Position Feedback' not found!", "warning");
+                ErrorLogger.LogToErrorText("Text element 'Position Feedback' not found!", "warning", errorLogText);
             }
         }
 
@@ -157,23 +157,23 @@ public class GeospatialObjectPlacer : MonoBehaviour
         }
 
         Debug.Log("Starting CheckEarthState...");
-        LogToErrorText("Starting CheckEarthState...", "black");
+        ErrorLogger.LogToErrorText("Starting CheckEarthState...", "black", errorLogText);
         StartCoroutine(CheckEarthState());
     }
 
     private System.Collections.IEnumerator CheckEarthState()
     {
         Debug.Log("Checking EarthState...");
-        LogToErrorText("Checking EarthState...", "black");
+        ErrorLogger.LogToErrorText("Checking EarthState...", "black", errorLogText);
         while (earthManager.EarthState != EarthState.Enabled)
         {
             Debug.Log("EarthState is not yet enabled. Waiting...");
-            LogToErrorText("EarthState is not yet enabled. Waiting...", "warning");
+            ErrorLogger.LogToErrorText("EarthState is not yet enabled. Waiting...", "warning", errorLogText);
             yield return new WaitForSeconds(1.0f); // Wait 1 second and check again
         }
 
         Debug.Log("EarthState is enabled!");
-        LogToErrorText("EarthState is enabled!", "success");
+        ErrorLogger.LogToErrorText("EarthState is enabled!", "success", errorLogText);
         isEarthStateReady = true;
 
         // Place all objects once EarthState is ready
@@ -185,7 +185,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
         if (!isEarthStateReady)
         {
             Debug.LogError("EarthState is not ready. Aborting.");
-            LogToErrorText("EarthState is not ready. Aborting.", "error");
+            ErrorLogger.LogToErrorText("EarthState is not ready. Aborting.", "error", errorLogText);
             return;
         }
 
@@ -197,22 +197,22 @@ public class GeospatialObjectPlacer : MonoBehaviour
 
 
             Debug.Log($"Placing object {i + 1} at Lat={position.x}, Lon={position.y}, Alt={position.z}...");
-            LogToErrorText($"Placing object {i + 1} at Lat={position.x}, Lon={position.y}, Alt={position.z}...", "success");
+            ErrorLogger.LogToErrorText($"Placing object {i + 1} at Lat={position.x}, Lon={position.y}, Alt={position.z}...", "success", errorLogText);
 
             var anchor = anchorManager.AddAnchor(position.x, position.y, position.z, rotation) as ARGeospatialAnchor;
             if (anchor == null)
             {
                 Debug.LogError($"Failed to create anchor for object {i + 1}. Check coordinates.");
-                LogToErrorText($"Failed to create anchor for object {i + 1}. Check coordinates.", "error");
+                ErrorLogger.LogToErrorText($"Failed to create anchor for object {i + 1}. Check coordinates.", "error", errorLogText);
                 continue;
             }
 
             Debug.Log($"Anchor created for object {i + 1} at position: {anchor.transform.position}");
-            LogToErrorText($"Anchor created for object {i + 1}", "success");
+            ErrorLogger.LogToErrorText($"Anchor created for object {i + 1}", "success", errorLogText);
             if (objectToPlace == null)
             {
                 Debug.LogError($"Prefab for object {i + 1} is not assigned.");
-                LogToErrorText($"Prefab for object {i + 1} is not assigned.", "error");
+                ErrorLogger.LogToErrorText($"Prefab for object {i + 1} is not assigned.", "error", errorLogText);
                 continue;
             }
 
@@ -220,7 +220,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
             if (placedObject == null)
             {
                 Debug.LogError($"Failed to instantiate object {i + 1}.");
-                LogToErrorText($"Failed to instantiate object {i + 1}.", "error");
+                ErrorLogger.LogToErrorText($"Failed to instantiate object {i + 1}.", "error", errorLogText);
                 continue;
             }
 
@@ -236,22 +236,25 @@ public class GeospatialObjectPlacer : MonoBehaviour
             var geospatialPose = earthManager.Convert(anchorPose);
             Quaternion eunRotation = geospatialPose.EunRotation;
 
-            originalAnchorRotations[anchor] = eunRotation; // Speichere die EunRotation
+            if (!originalAnchorRotations.ContainsKey(anchor))
+            {
+                originalAnchorRotations[anchor] = objectRotations[i];
+            }
             objectRotations[i] = eunRotation; // Aktualisiere die Rotation in der Liste
             Debug.Log($"Saved original rotation for anchor: {eunRotation.eulerAngles}");
 
             Debug.Log($"Object {i + 1} placed at: Lat={position.x}, Lon={position.y}, Alt={position.z}");
             Debug.Log($"Extracted EunRotation: {eunRotation.eulerAngles}");
-            LogToErrorText($"Object {i + 1} placed at: Lat={position.x}, Lon={position.y}, Alt={position.z}", "success");
-            LogToErrorText($"Object {i + 1} Extracted EunRotation: {eunRotation.eulerAngles}", "success");
+            ErrorLogger.LogToErrorText($"Object {i + 1} placed at: Lat={position.x}, Lon={position.y}, Alt={position.z}", "success", errorLogText);
+            ErrorLogger.LogToErrorText($"Object {i + 1} Extracted EunRotation: {eunRotation.eulerAngles}", "success", errorLogText);
         }
     }
 
     public void ResetPlacedObjects()
     {
         Debug.Log("Reset button clicked. Restarting the script...");
-        LogToErrorText("Reset button clicked. Restarting the script...", "black");
-        LogToErrorText($"Selected Database: {selectedDatabase}", "black");
+        ErrorLogger.LogToErrorText("Reset button clicked. Restarting the script...", "black", errorLogText);
+        ErrorLogger.LogToErrorText($"Selected Database: {selectedDatabase}", "black", errorLogText);
 
         // Remove all placed anchors
         foreach (var anchor in placedAnchors)
@@ -284,7 +287,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
         StartCoroutine(DelayedStart());
 
         Debug.Log("Script has been restarted.");
-        LogToErrorText("Script has been restarted.", "success");
+        ErrorLogger.LogToErrorText("Script has been restarted.", "success", errorLogText);
     }
 
     private IEnumerator WaitForARCoreInitialization()
@@ -292,12 +295,12 @@ public class GeospatialObjectPlacer : MonoBehaviour
         while (earthManager.EarthState != EarthState.Enabled)
         {
             Debug.Log("Waiting for ARCore to initialize...");
-            LogToErrorText("Waiting for ARCore to initialize...", "warning");
+            ErrorLogger.LogToErrorText("Waiting for ARCore to initialize...", "warning", errorLogText);
             yield return new WaitForSeconds(1.0f);
         }
 
         Debug.Log("ARCore initialized successfully!");
-        LogToErrorText("ARCore initialized successfully!", "success");
+        ErrorLogger.LogToErrorText("ARCore initialized successfully!", "success", errorLogText);
         isEarthStateReady = true;
     }
 
@@ -306,13 +309,13 @@ public class GeospatialObjectPlacer : MonoBehaviour
         if (placedAnchors.Count == 0)
         {
             Debug.LogError("No objects have been placed yet.");
-            LogToErrorText("No objects have been placed yet.", "warning");
+            ErrorLogger.LogToErrorText("No objects have been placed yet.", "warning", errorLogText);
             return;
         }
         if (Camera.main == null)
         {
             Debug.LogError("Main camera is not found!");
-            LogToErrorText("Main camera is not found!", "error");
+            ErrorLogger.LogToErrorText("Main camera is not found!", "error", errorLogText);
             return;
         }
         // Get the current position of the device
@@ -368,7 +371,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
             else
             {
                 Debug.LogError("Original position or rotation of the closest anchor not found.");
-                LogToErrorText("Original position or rotation of the closest anchor not found.", "error");
+                ErrorLogger.LogToErrorText("Original position or rotation of the closest anchor not found.", "error", errorLogText);
                 originalRotation = Quaternion.identity;
             }
         }
@@ -379,7 +382,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
         if (db == null)
         {
             Debug.LogError("Firestore is not initialized yet.");
-            LogToErrorText("Firestore is not initialized yet.", "warning");
+            ErrorLogger.LogToErrorText("Firestore is not initialized yet.", "warning", errorLogText);
             return;
         }
 
@@ -412,42 +415,13 @@ public class GeospatialObjectPlacer : MonoBehaviour
             if (task.IsCompleted)
             {
                 Debug.Log($"Object '{objectName}' position and rotation saved successfully!");
-                LogToErrorText($"Object '{objectName}' position and rotation saved successfully!", "success");
+                ErrorLogger.LogToErrorText($"Object '{objectName}' position and rotation saved successfully!", "success", errorLogText);
             }
             else
             {
                 Debug.LogError($"Failed to save object '{objectName}' position and rotation: {task.Exception}");
-                LogToErrorText($"Failed to save object '{objectName}' position and rotation: {task.Exception}", "error");
+                ErrorLogger.LogToErrorText($"Failed to save object '{objectName}' position and rotation: {task.Exception}", "error", errorLogText);
             }
         });
-    }
-    private void LogToErrorText(string message, string severity)
-    {
-        Debug.Log(message);
-
-        if (errorLogText != null)
-        {
-            string color = "black"; // Standardfarbe
-
-            // Farbe basierend auf der Schwere festlegen
-            switch (severity.ToLower())
-            {
-                case "black":
-                    color = "black"; // Weiß für normale Informationen
-                    break;
-                case "success":
-                    color = "green"; // Weiß für normale Informationen
-                    break;
-                case "warning":
-                    color = "yellow"; // Gelb für Warnungen
-                    break;
-                case "error":
-                    color = "red"; // Rot für Fehler
-                    break;
-            }
-
-            // Nachricht mit Farbe hinzufügen
-            errorLogText.text += $"<color={color}>{message}</color>\n";
-        }
     }
 }
