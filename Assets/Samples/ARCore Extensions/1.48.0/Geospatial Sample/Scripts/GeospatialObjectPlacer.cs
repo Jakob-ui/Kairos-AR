@@ -26,7 +26,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
     private List<ARGeospatialAnchor> placedAnchors = new List<ARGeospatialAnchor>();
     private bool isEarthStateReady = false;
     string databaseSaving;
-    string selectedDatabase = "nicht gewählt";
+    string selectedDatabase = "ar-pictures-Wien";
 
     void Start()
     {
