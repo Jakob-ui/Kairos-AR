@@ -337,26 +337,19 @@ public class GeospatialObjectPlacer : MonoBehaviour
 
         if (closestAnchor != null)
         {
-            // Get the current geospatial position of the anchor
             Pose anchorPose = new Pose(closestAnchor.transform.position, closestAnchor.transform.rotation);
             var geospatialPose = earthManager.Convert(anchorPose);
 
-            // Get the original position and rotation of the anchor
             if (originalAnchorPositions.TryGetValue(closestAnchor, out Vector3 originalPosition) &&
                 originalAnchorRotations.TryGetValue(closestAnchor, out Quaternion originalRotation))
             {
-                // Get the prefab name
                 string prefabName = closestAnchor.transform.GetChild(0).gameObject.name + "_" + DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
 
-                // Get the current rotation of the placed object
                 Quaternion currentRotation = geospatialPose.EunRotation;
 
-                // Calculate the difference in accuracy
-                // Calculate the difference in accuracy
                 float positionAccuracy = Vector3.Distance(originalPosition, new Vector3((float)geospatialPose.Latitude, (float)geospatialPose.Longitude, (float)geospatialPose.Altitude));
                 float rotationAccuracy = Quaternion.Angle(originalRotation, currentRotation);
 
-                // Display the original and current positions, rotations, and the accuracy difference
                 positionsText.text = $"Closest object: {prefabName}\n";
                 positionsText.text += $"Original Position: Lat={originalPosition.x}, Lon={originalPosition.y}, Alt={originalPosition.z}\n";
                 positionsText.text += $"Current Position: Lat={geospatialPose.Latitude}, Lon={geospatialPose.Longitude}, Alt={geospatialPose.Altitude}\n";
@@ -365,7 +358,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
                 positionsText.text += $"Accuracy Difference: {positionAccuracy:F2} meters\n";
                 positionsText.text += $"Rotation Difference: {rotationAccuracy:F2} degrees\n";
 
-                // Save both original and current positions and rotations to Firestore
+                // Save originaal and current positions androtations to firestore
                 SaveObjectPosition(prefabName, originalPosition, new Vector3((float)geospatialPose.Latitude, (float)geospatialPose.Altitude, (float)geospatialPose.Longitude), positionAccuracy, rotationAccuracy, originalRotation, currentRotation);
             }
             else
