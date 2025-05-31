@@ -9,6 +9,7 @@ using Firebase.Firestore;
 using System;
 using UnityEngine.Android;
 using System.Collections;
+using TMPro;
 
 public class GeospatialObjectPlacer : MonoBehaviour
 {
@@ -16,6 +17,8 @@ public class GeospatialObjectPlacer : MonoBehaviour
     public List<Vector3> objectPositions;
     public List<Quaternion> objectRotations = new List<Quaternion>();
     public Text positionsText;
+    public Text samplingTimerText;
+    private float samplingElapsedTime = 0f;
     public Text errorLogText;
     public ARAnchorManager anchorManager;
     public AREarthManager earthManager; 
@@ -27,6 +30,29 @@ public class GeospatialObjectPlacer : MonoBehaviour
     private bool isEarthStateReady = false;
     string databaseSaving;
     string selectedDatabase = "ar-pictures-Wien";
+
+    [Serializable]
+    public class PositionSample
+    {
+        public string objectName;
+        public Vector3 originalPosition;
+        public Vector3 currentPosition;
+        public float positionAcc;
+        public float rotationAcc;
+        public Quaternion originalRotation;
+        public Quaternion currentRotation;
+        public DateTime timestamp;
+    }
+
+    private List<PositionSample> positionSamples = new List<PositionSample>();
+    private Coroutine samplingCoroutine;
+    public float samplingInterval = 1f;
+
+    public Button samplingButton;
+    public Image samplingButtonImage; 
+    public TMP_Text samplingButtonText;
+    private bool isSampling = false;
+
 
     void Start()
     {
@@ -257,6 +283,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
         Debug.Log("Reset button clicked. Restarting the script...");
         ErrorLogger.LogToErrorText("Reset button clicked. Restarting the script...", "black", errorLogText);
         ErrorLogger.LogToErrorText($"Selected Database: {selectedDatabase}", "black", errorLogText);
+        samplingTimerText.text = $"Laufzeit: Start reading Position";
 
         // Remove all placed anchors
         foreach (var anchor in placedAnchors)
@@ -306,70 +333,126 @@ public class GeospatialObjectPlacer : MonoBehaviour
         isEarthStateReady = true;
     }
 
-    public void OnGetPlacedObjectPositionsButtonClick()
+    //Hilfsfunktionen für OnGetPlacedObjectPositionsButtonClick
+    public void StartSampling()
     {
-        if (placedAnchors.Count == 0)
+        if (samplingCoroutine == null)
         {
-            Debug.LogError("No objects have been placed yet.");
-            ErrorLogger.LogToErrorText("No objects have been placed yet.", "warning", errorLogText);
-            return;
+            samplingElapsedTime = 0f;
+            UpdateSamplingTimerText();
+            samplingCoroutine = StartCoroutine(SamplePositionsCoroutine());
         }
-        if (Camera.main == null)
+    }
+
+    public void StopSamplingAndSendBatch()
+    {
+        if (samplingCoroutine != null)
         {
-            Debug.LogError("Main camera is not found!");
-            ErrorLogger.LogToErrorText("Main camera is not found!", "error", errorLogText);
-            return;
+            StopCoroutine(samplingCoroutine);
+            samplingCoroutine = null;
+            UpdateSamplingTimerText();
+            SendToFirestore();
         }
-        // Get the current position of the device
-        var cameraPosition = Camera.main.transform.position;
+    }
 
-        // Find the nearest anchor
-        float minDistance = float.MaxValue;
-        ARGeospatialAnchor closestAnchor = null;
-
-        foreach (var anchor in placedAnchors)
+    private IEnumerator SamplePositionsCoroutine()
+    {
+        while (true)
         {
-            float distance = Vector3.Distance(cameraPosition, anchor.transform.position);
-            if (distance < minDistance)
+            SaveCurrentPositionToBatch();
+            samplingElapsedTime += samplingInterval;
+            UpdateSamplingTimerText();
+            yield return new WaitForSeconds(samplingInterval);
+        }
+    }
+    private void UpdateSamplingTimerText()
+    {
+        if (samplingTimerText != null)
+        {
+            TimeSpan t = TimeSpan.FromSeconds(samplingElapsedTime);
+            samplingTimerText.text = $"Laufzeit: {t:mm\\:ss}";
+        }
+    }
+
+    //Button Controll
+    public void OnSamplingButtonClick()
+    {
+        if (!isSampling)
+        {
+            StartSampling();
+            isSampling = true;
+            samplingButtonText.text = "Stopp";
+            samplingButtonImage.color = Color.red;
+        }
+        else
+        {
+            StopSamplingAndSendBatch();
+            isSampling = false;
+            samplingButtonText.text = "Start reading";
+            samplingButtonImage.color = Color.blue;
+        }
+    }
+
+    //save function
+    private void SaveCurrentPositionToBatch()
+    {
+        // Beispiel: Nimm das erste platzierte Objekt
+        if (placedAnchors.Count == 0) return;
+        if (Camera.main == null) return;
+        var anchor = placedAnchors[0];
+        Pose anchorPose = new Pose(anchor.transform.position, anchor.transform.rotation);
+        var geospatialPose = earthManager.Convert(anchorPose);
+
+        if (originalAnchorPositions.TryGetValue(anchor, out Vector3 originalPosition) &&
+            originalAnchorRotations.TryGetValue(anchor, out Quaternion originalRotation))
+        {
+            Quaternion currentRotation = geospatialPose.EunRotation;
+            float positionAccuracy = Vector3.Distance(originalPosition, new Vector3((float)geospatialPose.Latitude, (float)geospatialPose.Longitude, (float)geospatialPose.Altitude));
+            float rotationAccuracy = Quaternion.Angle(originalRotation, currentRotation);
+
+            positionSamples.Add(new PositionSample
             {
-                minDistance = distance;
-                closestAnchor = anchor;
-            }
+                objectName = anchor.transform.GetChild(0).gameObject.name,
+                originalPosition = originalPosition,
+                currentPosition = new Vector3((float)geospatialPose.Latitude, (float)geospatialPose.Altitude, (float)geospatialPose.Longitude),
+                positionAcc = positionAccuracy,
+                rotationAcc = rotationAccuracy,
+                originalRotation = originalRotation,
+                currentRotation = currentRotation,
+                timestamp = DateTime.UtcNow
+            });
+            positionsText.text = $"Closest object: {anchor.transform.GetChild(0).gameObject.name}\n";
+            positionsText.text += $"Original Position: Lat={originalPosition.x}, Lon={originalPosition.y}, Alt={originalPosition.z}\n";
+            positionsText.text += $"Current Position: Lat={geospatialPose.Latitude}, Lon={geospatialPose.Longitude}, Alt={geospatialPose.Altitude}\n";
+            positionsText.text += $"Original Rotation (Eun): {originalRotation.eulerAngles}\n";
+            positionsText.text += $"Current Rotation (Eun): {currentRotation.eulerAngles}\n";
+            positionsText.text += $"Accuracy Difference: {positionAccuracy:F2} meters\n";
+            positionsText.text += $"Rotation Difference: {rotationAccuracy:F2} degrees\n";
         }
-
-        if (closestAnchor != null)
+        else
         {
-            Pose anchorPose = new Pose(closestAnchor.transform.position, closestAnchor.transform.rotation);
-            var geospatialPose = earthManager.Convert(anchorPose);
-
-            if (originalAnchorPositions.TryGetValue(closestAnchor, out Vector3 originalPosition) &&
-                originalAnchorRotations.TryGetValue(closestAnchor, out Quaternion originalRotation))
-            {
-                string prefabName = closestAnchor.transform.GetChild(0).gameObject.name + "_" + DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
-
-                Quaternion currentRotation = geospatialPose.EunRotation;
-
-                float positionAccuracy = Vector3.Distance(originalPosition, new Vector3((float)geospatialPose.Latitude, (float)geospatialPose.Longitude, (float)geospatialPose.Altitude));
-                float rotationAccuracy = Quaternion.Angle(originalRotation, currentRotation);
-
-                positionsText.text = $"Closest object: {prefabName}\n";
-                positionsText.text += $"Original Position: Lat={originalPosition.x}, Lon={originalPosition.y}, Alt={originalPosition.z}\n";
-                positionsText.text += $"Current Position: Lat={geospatialPose.Latitude}, Lon={geospatialPose.Longitude}, Alt={geospatialPose.Altitude}\n";
-                positionsText.text += $"Original Rotation (Eun): {originalRotation.eulerAngles}\n";
-                positionsText.text += $"Current Rotation (Eun): {currentRotation.eulerAngles}\n";
-                positionsText.text += $"Accuracy Difference: {positionAccuracy:F2} meters\n";
-                positionsText.text += $"Rotation Difference: {rotationAccuracy:F2} degrees\n";
-
-                // Save originaal and current positions androtations to firestore
-                SaveObjectPosition(prefabName, originalPosition, new Vector3((float)geospatialPose.Latitude, (float)geospatialPose.Altitude, (float)geospatialPose.Longitude), positionAccuracy, rotationAccuracy, originalRotation, currentRotation);
-            }
-            else
-            {
-                Debug.LogError("Original position or rotation of the closest anchor not found.");
-                ErrorLogger.LogToErrorText("Original position or rotation of the closest anchor not found.", "error", errorLogText);
-                originalRotation = Quaternion.identity;
-            }
+            Debug.LogError("Original position or rotation of the closest anchor not found.");
+            ErrorLogger.LogToErrorText("Original position or rotation of the closest anchor not found.", "error", errorLogText);
         }
+    }
+
+    private void SendToFirestore()
+    {
+        foreach (var sample in positionSamples)
+        {
+            // Erzeuge einen eindeutigen Namen für jedes Sample
+            string uniqueName = $"{sample.objectName}_{sample.timestamp:yyyyMMdd_HHmmss_fff}";
+            SaveObjectPosition(
+                uniqueName,
+                sample.originalPosition,
+                sample.currentPosition,
+                sample.positionAcc,
+                sample.rotationAcc,
+                sample.originalRotation,
+                sample.currentRotation
+            );
+        }
+        positionSamples.Clear();
     }
 
     public void SaveObjectPosition(string objectName, Vector3 originalPosition, Vector3 currentPosition, float positionAcc, float rotationAcc, Quaternion originalRotation, Quaternion currentRotation)

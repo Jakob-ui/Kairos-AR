@@ -1369,6 +1369,7 @@ RectTransform:
   m_Children:
   - {fileID: 1587000027}
   - {fileID: 2109944237}
+  - {fileID: 459467010}
   - {fileID: 1691051270}
   m_Father: {fileID: 1041456684}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1414,6 +1415,85 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 430750537}
+  m_CullTransparentMesh: 0
+--- !u!1 &459467009
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 459467010}
+  - component: {fileID: 459467012}
+  - component: {fileID: 459467011}
+  m_Layer: 5
+  m_Name: Timer Feedback
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &459467010
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 459467009}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 430750538}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: -352, y: -1541}
+  m_SizeDelta: {x: -930.35, y: -140}
+  m_Pivot: {x: 0.5, y: 0}
+--- !u!114 &459467011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 459467009}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.7137764, g: 0.435849, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_FontSize: 43
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 0
+    m_MaxSize: 300
+    m_Alignment: 0
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 0
+    m_VerticalOverflow: 1
+    m_LineSpacing: 1
+  m_Text: 'Laufzeit: Start reading Position'
+--- !u!222 &459467012
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 459467009}
   m_CullTransparentMesh: 0
 --- !u!1 &493008991
 GameObject:
@@ -2070,7 +2150,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Save Position
+  m_text: Start reading
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2689,16 +2769,21 @@ MonoBehaviour:
   - {x: 48.18318, y: 16.27189, z: 284.3671}
   - {x: 48.20702, y: 16.38434, z: 219.22716}
   objectRotations:
-  - {x: 0, y: 0, z: 0, w: 1}
+  - {x: 0, y: 0.017452406, z: 0, w: 0.9998477}
   - {x: 0.18206209, y: 0.042888984, z: -0.007949004, w: 0.98231906}
   - {x: 0.4698048, y: 0.2995949, z: -0.17332008, w: 0.8120878}
   - {x: 0.16773134, y: 0.25488698, z: -0.044943478, w: 0.9512512}
   - {x: 0, y: 0.258819, z: 0, w: 0.9659258}
   positionsText: {fileID: 2109944238}
+  samplingTimerText: {fileID: 459467011}
   errorLogText: {fileID: 2106482960}
   anchorManager: {fileID: 691323910}
   earthManager: {fileID: 691323912}
   StartMenu: {fileID: 1366318131}
+  samplingInterval: 1
+  samplingButton: {fileID: 1148293890}
+  samplingButtonImage: {fileID: 1148293891}
+  samplingButtonText: {fileID: 591078324}
 --- !u!1 &697834360
 GameObject:
   m_ObjectHideFlags: 0
@@ -4102,7 +4187,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 691323915}
         m_TargetAssemblyTypeName: GeospatialObjectPlacer, Assembly-CSharp
-        m_MethodName: OnGetPlacedObjectPositionsButtonClick
+        m_MethodName: OnSamplingButtonClick
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -7602,7 +7687,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: TAP ON SCREEN TO CREATE ANCHOR
+  m_Text: 
 --- !u!222 &1790705548
 CanvasRenderer:
   m_ObjectHideFlags: 0
