@@ -36,14 +36,16 @@ public class GeospatialObjectPlacer : MonoBehaviour
         StartMenu.GetSelectedDatabase(selectedDatabase);
         ErrorLogger.LogToErrorText($"Selected Database: {selectedDatabase}", "black", errorLogText);
         ErrorLogger.LogToErrorText($"Starting GeospatialObjectPlacer on platform: {Application.platform}", "black", errorLogText);
-       
+
         if (Application.platform == RuntimePlatform.IPhonePlayer)
         {
             Debug.Log("Running on iOS.");
+            ErrorLogger.LogToErrorText("Running on iOS.", "success", errorLogText);
         }
         else if (Application.platform == RuntimePlatform.Android)
         {
             Debug.Log("Running on Android.");
+            ErrorLogger.LogToErrorText("Running on Android.", "success", errorLogText);
         }
 #if UNITY_ANDROID
         // Check for permissions on Android
