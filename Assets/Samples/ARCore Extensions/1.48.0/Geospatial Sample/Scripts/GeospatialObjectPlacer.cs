@@ -31,7 +31,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
     string databaseSaving;
     string selectedDatabase = "ar-pictures-Wien";
 
-    [Serializable]
+    // ...existing code...
     public class PositionSample
     {
         public string objectName;
@@ -42,6 +42,11 @@ public class GeospatialObjectPlacer : MonoBehaviour
         public Quaternion originalRotation;
         public Quaternion currentRotation;
         public DateTime timestamp;
+
+        // Kamera-Position und -Rotation
+        public Vector3 cameraPosition;
+        public Quaternion cameraRotation;
+        
     }
 
     private List<PositionSample> positionSamples = new List<PositionSample>();
@@ -396,43 +401,86 @@ public class GeospatialObjectPlacer : MonoBehaviour
     //save function
     private void SaveCurrentPositionToBatch()
     {
-        // Beispiel: Nimm das erste platzierte Objekt
-        if (placedAnchors.Count == 0) return;
-        if (Camera.main == null) return;
-        var anchor = placedAnchors[0];
-        Pose anchorPose = new Pose(anchor.transform.position, anchor.transform.rotation);
-        var geospatialPose = earthManager.Convert(anchorPose);
-
-        if (originalAnchorPositions.TryGetValue(anchor, out Vector3 originalPosition) &&
-            originalAnchorRotations.TryGetValue(anchor, out Quaternion originalRotation))
+        if (placedAnchors.Count == 0)
         {
-            Quaternion currentRotation = geospatialPose.EunRotation;
-            float positionAccuracy = Vector3.Distance(originalPosition, new Vector3((float)geospatialPose.Latitude, (float)geospatialPose.Longitude, (float)geospatialPose.Altitude));
-            float rotationAccuracy = Quaternion.Angle(originalRotation, currentRotation);
-
-            positionSamples.Add(new PositionSample
-            {
-                objectName = anchor.transform.GetChild(0).gameObject.name,
-                originalPosition = originalPosition,
-                currentPosition = new Vector3((float)geospatialPose.Latitude, (float)geospatialPose.Altitude, (float)geospatialPose.Longitude),
-                positionAcc = positionAccuracy,
-                rotationAcc = rotationAccuracy,
-                originalRotation = originalRotation,
-                currentRotation = currentRotation,
-                timestamp = DateTime.UtcNow
-            });
-            positionsText.text = $"Closest object: {anchor.transform.GetChild(0).gameObject.name}\n";
-            positionsText.text += $"Original Position: Lat={originalPosition.x}, Lon={originalPosition.y}, Alt={originalPosition.z}\n";
-            positionsText.text += $"Current Position: Lat={geospatialPose.Latitude}, Lon={geospatialPose.Longitude}, Alt={geospatialPose.Altitude}\n";
-            positionsText.text += $"Original Rotation (Eun): {originalRotation.eulerAngles}\n";
-            positionsText.text += $"Current Rotation (Eun): {currentRotation.eulerAngles}\n";
-            positionsText.text += $"Accuracy Difference: {positionAccuracy:F2} meters\n";
-            positionsText.text += $"Rotation Difference: {rotationAccuracy:F2} degrees\n";
+            Debug.LogError("No objects have been placed yet.");
+            ErrorLogger.LogToErrorText("No objects have been placed yet.", "warning", errorLogText);
+            return;
         }
-        else
+        if (Camera.main == null)
         {
-            Debug.LogError("Original position or rotation of the closest anchor not found.");
-            ErrorLogger.LogToErrorText("Original position or rotation of the closest anchor not found.", "error", errorLogText);
+            Debug.LogError("Main camera is not found!");
+            ErrorLogger.LogToErrorText("Main camera is not found!", "error", errorLogText);
+            return;
+        }
+
+        // Get the current position of the device
+        var cameraPosition = Camera.main.transform.position;
+
+        // Find the nearest anchor
+        float minDistance = float.MaxValue;
+        ARGeospatialAnchor closestAnchor = null;
+
+        foreach (var anchor in placedAnchors)
+        {
+            float distance = Vector3.Distance(cameraPosition, anchor.transform.position);
+            if (distance < minDistance)
+            {
+                minDistance = distance;
+                closestAnchor = anchor;
+            }
+        }
+
+        if (closestAnchor != null)
+        {
+            // Get the current geospatial position of the anchor
+            Pose anchorPose = new Pose(closestAnchor.transform.position, closestAnchor.transform.rotation);
+            var geospatialPose = earthManager.Convert(anchorPose);
+
+            // Get the original position and rotation of the anchor
+            if (originalAnchorPositions.TryGetValue(closestAnchor, out Vector3 originalPosition) &&
+                originalAnchorRotations.TryGetValue(closestAnchor, out Quaternion originalRotation))
+            {
+                // Get the prefab name
+                string prefabName = closestAnchor.transform.GetChild(0).gameObject.name;
+
+                // Get the current rotation of the placed object
+                Quaternion currentRotation = geospatialPose.EunRotation;
+
+                // Calculate the difference in accuracy
+                float positionAccuracy = Vector3.Distance(originalPosition, new Vector3((float)geospatialPose.Latitude, (float)geospatialPose.Longitude, (float)geospatialPose.Altitude));
+                float rotationAccuracy = Quaternion.Angle(originalRotation, currentRotation);
+
+                Vector3 camPos = Camera.main.transform.position;
+                Quaternion camRot = Camera.main.transform.rotation;
+
+                positionSamples.Add(new PositionSample
+                {
+                    objectName = prefabName,
+                    originalPosition = originalPosition,
+                    currentPosition = new Vector3((float)geospatialPose.Latitude, (float)geospatialPose.Altitude, (float)geospatialPose.Longitude),
+                    positionAcc = positionAccuracy,
+                    rotationAcc = rotationAccuracy,
+                    originalRotation = originalRotation,
+                    currentRotation = currentRotation,
+                    timestamp = DateTime.UtcNow,
+                    cameraPosition = camPos,
+                    cameraRotation = camRot
+                });
+
+                positionsText.text = $"Closest object: {prefabName}\n";
+                positionsText.text += $"Original Position: Lat={originalPosition.x}, Lon={originalPosition.y}, Alt={originalPosition.z}\n";
+                positionsText.text += $"Current Position: Lat={geospatialPose.Latitude}, Lon={geospatialPose.Longitude}, Alt={geospatialPose.Altitude}\n";
+                positionsText.text += $"Original Rotation (Eun): {originalRotation.eulerAngles}\n";
+                positionsText.text += $"Current Rotation (Eun): {currentRotation.eulerAngles}\n";
+                positionsText.text += $"Accuracy Difference: {positionAccuracy:F2} meters\n";
+                positionsText.text += $"Rotation Difference: {rotationAccuracy:F2} degrees\n";
+            }
+            else
+            {
+                Debug.LogError("Original position or rotation of the closest anchor not found.");
+                ErrorLogger.LogToErrorText("Original position or rotation of the closest anchor not found.", "error", errorLogText);
+            }
         }
     }
 
@@ -443,19 +491,21 @@ public class GeospatialObjectPlacer : MonoBehaviour
             // Erzeuge einen eindeutigen Namen für jedes Sample
             string uniqueName = $"{sample.objectName}_{sample.timestamp:yyyyMMdd_HHmmss_fff}";
             SaveObjectPosition(
-                uniqueName,
-                sample.originalPosition,
-                sample.currentPosition,
-                sample.positionAcc,
-                sample.rotationAcc,
-                sample.originalRotation,
-                sample.currentRotation
-            );
+            uniqueName,
+            sample.originalPosition,
+            sample.currentPosition,
+            sample.positionAcc,
+            sample.rotationAcc,
+            sample.originalRotation,
+            sample.currentRotation,
+            sample.cameraPosition,
+            sample.cameraRotation
+        );
         }
         positionSamples.Clear();
     }
 
-    public void SaveObjectPosition(string objectName, Vector3 originalPosition, Vector3 currentPosition, float positionAcc, float rotationAcc, Quaternion originalRotation, Quaternion currentRotation)
+    public void SaveObjectPosition(string objectName, Vector3 originalPosition, Vector3 currentPosition, float positionAcc, float rotationAcc, Quaternion originalRotation, Quaternion currentRotation, Vector3 cameraPosition, Quaternion cameraRotation)
     {
         if (db == null)
         {
@@ -463,6 +513,8 @@ public class GeospatialObjectPlacer : MonoBehaviour
             ErrorLogger.LogToErrorText("Firestore is not initialized yet.", "warning", errorLogText);
             return;
         }
+
+        var cameraGeoPose = earthManager.CameraGeospatialPose;
 
         // Reference to the Firestore collection
         var docRef = db.Collection(databaseSaving).Document(objectName);
@@ -485,7 +537,18 @@ public class GeospatialObjectPlacer : MonoBehaviour
             { "original-rotation-z", originalRotation.eulerAngles.z },
             { "current-rotation-x", currentRotation.eulerAngles.x },
             { "current-rotation-y", currentRotation.eulerAngles.y },
-            { "current-rotation-z", currentRotation.eulerAngles.z }
+            { "current-rotation-z", currentRotation.eulerAngles.z },
+            //Kamera stuff
+            { "camera-position-x", cameraPosition.x },
+        { "camera-position-y", cameraPosition.y },
+        { "camera-position-z", cameraPosition.z },
+        { "camera-rotation-x", cameraRotation.eulerAngles.x },
+        { "camera-rotation-y", cameraRotation.eulerAngles.y },
+        { "camera-rotation-z", cameraRotation.eulerAngles.z },
+            //Geolocation of the camera
+         { "camera-geo-latitude", cameraGeoPose.Latitude },
+        { "camera-geo-longitude", cameraGeoPose.Longitude },
+        { "camera-geo-altitude", cameraGeoPose.Altitude }
         };
 
         docRef.SetAsync(data).ContinueWithOnMainThread(task =>
