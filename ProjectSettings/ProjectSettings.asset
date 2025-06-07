@@ -14,6 +14,7 @@ PlayerSettings:
   accelerometerFrequency: 60
   companyName: jakob
   productName: Kairos-v2
+  productName: Kairos-v2
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -139,6 +140,7 @@ PlayerSettings:
   loadStoreDebugModeEnabled: 0
   visionOSBundleVersion: 1.0
   tvOSBundleVersion: 1.0
+  bundleVersion: 2
   bundleVersion: 2
   preloadedAssets:
   - {fileID: 8117709999312133658, guid: c05cd96c0845cc7408ae57ff315d676c, type: 2}

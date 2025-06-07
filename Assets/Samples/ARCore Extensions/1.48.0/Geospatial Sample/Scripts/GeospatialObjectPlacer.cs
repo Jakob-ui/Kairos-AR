@@ -32,6 +32,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
     string selectedDatabase = "ar-pictures-Wien";
 
     // ...existing code...
+    // ...existing code...
     public class PositionSample
     {
         public string objectName;
@@ -46,7 +47,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
         // Kamera-Position und -Rotation
         public Vector3 cameraPosition;
         public Quaternion cameraRotation;
-
+        
     }
 
     private List<PositionSample> positionSamples = new List<PositionSample>();
