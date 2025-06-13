@@ -21,7 +21,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
     private float samplingElapsedTime = 0f;
     public Text errorLogText;
     public ARAnchorManager anchorManager;
-    public AREarthManager earthManager; 
+    public AREarthManager earthManager;
     private Dictionary<ARGeospatialAnchor, Vector3> originalAnchorPositions = new Dictionary<ARGeospatialAnchor, Vector3>();
     private Dictionary<ARGeospatialAnchor, Quaternion> originalAnchorRotations = new Dictionary<ARGeospatialAnchor, Quaternion>();
     private FirebaseFirestore db;
@@ -46,7 +46,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
         // Kamera-Position und -Rotation
         public Vector3 cameraPosition;
         public Quaternion cameraRotation;
-        
+
     }
 
     private List<PositionSample> positionSamples = new List<PositionSample>();
@@ -54,7 +54,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
     public float samplingInterval = 1f;
 
     public Button samplingButton;
-    public Image samplingButtonImage; 
+    public Image samplingButtonImage;
     public TMP_Text samplingButtonText;
     private bool isSampling = false;
 
@@ -454,7 +454,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
                 Vector3 camPos = Camera.main.transform.position;
                 Quaternion camRot = Camera.main.transform.rotation;
 
-                positionSamples.Add(new PositionSample
+                /*positionSamples.Add(new PositionSample
                 {
                     objectName = prefabName,
                     originalPosition = originalPosition,
@@ -466,7 +466,20 @@ public class GeospatialObjectPlacer : MonoBehaviour
                     timestamp = DateTime.UtcNow,
                     cameraPosition = camPos,
                     cameraRotation = camRot
-                });
+                });*/
+                Vector3 currentPosition = new Vector3((float)geospatialPose.Latitude, (float)geospatialPose.Altitude, (float)geospatialPose.Longitude);
+
+                SaveObjectPosition(
+                    prefabName,
+                    originalPosition,
+                    currentPosition,
+                    positionAccuracy,
+                    rotationAccuracy,
+                    originalRotation,
+                    currentRotation,
+                    camPos,
+                    camRot
+                );
 
                 positionsText.text = $"Closest object: {prefabName}\n";
                 positionsText.text += $"Original Position: Lat={originalPosition.x}, Lon={originalPosition.y}, Alt={originalPosition.z}\n";
