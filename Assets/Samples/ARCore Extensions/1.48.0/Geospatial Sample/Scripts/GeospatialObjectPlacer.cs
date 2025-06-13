@@ -32,6 +32,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
     string selectedDatabase = "ar-pictures-Wien";
 
     // ...existing code...
+    // ...existing code...
     public class PositionSample
     {
         public string objectName;
@@ -92,10 +93,10 @@ public class GeospatialObjectPlacer : MonoBehaviour
         }
         databaseSaving = "android-placed-objects";
 #elif UNITY_IOS
-    // On iOS, permissions must be declared in Info.plist and are requested automatically
-    Debug.Log("Ensure permissions are declared in Info.plist.");
-    ErrorLogger.LogToErrorText("Ensure permissions are declared in Info.plist.", "black", errorLogText);
-    databaseSaving = "ios-placed-objects"
+        // On iOS, permissions must be declared in Info.plist and are requested automatically
+        Debug.Log("Ensure permissions are declared in Info.plist.");
+        ErrorLogger.LogToErrorText("Ensure permissions are declared in Info.plist.", "black", errorLogText);
+        databaseSaving = "ios-placed-objects";
 #endif
 
         InitializeApp();
