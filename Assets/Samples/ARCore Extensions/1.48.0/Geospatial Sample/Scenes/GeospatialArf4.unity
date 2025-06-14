@@ -971,92 +971,6 @@ RectTransform:
   m_AnchoredPosition: {x: -97, y: 99}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.50000006}
---- !u!1001 &373480489
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 5895247704524623405, guid: d8c7faab8f9e63c40b05dc3bbc8dd36c, type: 3}
-      propertyPath: m_Name
-      value: Schwedenplatz 1_Haus
-      objectReference: {fileID: 0}
-    - target: {fileID: 6863982293097406437, guid: d8c7faab8f9e63c40b05dc3bbc8dd36c, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -2769.65
-      objectReference: {fileID: 0}
-    - target: {fileID: 6863982293097406437, guid: d8c7faab8f9e63c40b05dc3bbc8dd36c, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 280.1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6863982293097406437, guid: d8c7faab8f9e63c40b05dc3bbc8dd36c, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -1349.07
-      objectReference: {fileID: 0}
-    - target: {fileID: 6863982293097406437, guid: d8c7faab8f9e63c40b05dc3bbc8dd36c, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6863982293097406437, guid: d8c7faab8f9e63c40b05dc3bbc8dd36c, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6863982293097406437, guid: d8c7faab8f9e63c40b05dc3bbc8dd36c, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6863982293097406437, guid: d8c7faab8f9e63c40b05dc3bbc8dd36c, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6863982293097406437, guid: d8c7faab8f9e63c40b05dc3bbc8dd36c, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6863982293097406437, guid: d8c7faab8f9e63c40b05dc3bbc8dd36c, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6863982293097406437, guid: d8c7faab8f9e63c40b05dc3bbc8dd36c, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 5895247704524623405, guid: d8c7faab8f9e63c40b05dc3bbc8dd36c, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 373480491}
-  m_SourcePrefab: {fileID: 100100000, guid: d8c7faab8f9e63c40b05dc3bbc8dd36c, type: 3}
---- !u!1 &373480490 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5895247704524623405, guid: d8c7faab8f9e63c40b05dc3bbc8dd36c, type: 3}
-  m_PrefabInstance: {fileID: 373480489}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &373480491
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 373480490}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0b3d0e3f52dfe4243aceaba16f9cd0c7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _altitudeOffset: NaN
-  _latitude: 48.18092054612332
-  _longitude: 16.275793699810905
-  _altitude: 281.843037545681
-  _altitudeType: 0
-  _useEditorAltitudeOverride: 0
-  _editorAltitudeOverride: 0
-  _anchorManager: {fileID: 691323910}
-  Origin: {fileID: 838287689}
 --- !u!1 &384014290
 GameObject:
   m_ObjectHideFlags: 0
@@ -2766,7 +2680,7 @@ MonoBehaviour:
   objectPositions:
   - {x: 48.2134, y: 15.63135, z: 321.141}
   - {x: 48.19242, y: 16.31626, z: 253.41489}
-  - {x: 48.18548, y: 16.31264, z: 241.4557}
+  - {x: 48.18709, y: 16.313488, z: 239.58464}
   - {x: 48.18092, y: 16.275793, z: 281.84305}
   - {x: 48.20702, y: 16.38434, z: 219.22716}
   - {x: 48.19356, y: 16.31275, z: 264.8003}
@@ -8841,4 +8755,3 @@ SceneRoots:
   m_Roots:
   - {fileID: 683091023}
   - {fileID: 1494830965}
-  - {fileID: 373480489}
