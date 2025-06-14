@@ -473,7 +473,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
                 positionsText.text += $"Original Position: Lat={originalPosition.x}, Lon={originalPosition.y}, Alt={originalPosition.z}\n";
                 positionsText.text += $"Current Position: Lat={geospatialPose.Latitude}, Lon={geospatialPose.Longitude}, Alt={geospatialPose.Altitude}\n";
                 positionsText.text += $"Original Rotation (Eun): {originalRotation.eulerAngles}\n";
-                positionsText.text += $"Current Rotation (Eun): {currentRotation.eulerAngles}\n";
+                positionsText.text += $"Current Rotation (Eun): {currentRotation.eulerAngles.x}, {currentRotation.eulerAngles.y}, {currentRotation.eulerAngles.z}\n";
                 positionsText.text += $"Accuracy Difference: {positionAccuracy:F2} meters\n";
                 positionsText.text += $"Rotation Difference: {rotationAccuracy:F2} degrees\n";
 
