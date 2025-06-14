@@ -37,7 +37,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
     {
         public string objectName;
         public Vector3 originalPosition;
-        public Vector3 currentPosition;
+        public GeospatialPose currentPosition;
         public float positionAcc;
         public float rotationAcc;
         public Quaternion originalRotation;
@@ -91,7 +91,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
             StartCoroutine(WaitForPermissions());
             return;
         }
-        databaseSaving = "android-placed-objects";
+        databaseSaving = "android-placed-objects-test";
 #elif UNITY_IOS
         // On iOS, permissions must be declared in Info.plist and are requested automatically
         Debug.Log("Ensure permissions are declared in Info.plist.");
@@ -357,7 +357,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
             StopCoroutine(samplingCoroutine);
             samplingCoroutine = null;
             UpdateSamplingTimerText();
-            SendToFirestore();
+            //SendToFirestore();
         }
     }
 
@@ -450,16 +450,16 @@ public class GeospatialObjectPlacer : MonoBehaviour
 
                 // Calculate the difference in accuracy
                 float positionAccuracy = Vector3.Distance(originalPosition, new Vector3((float)geospatialPose.Latitude, (float)geospatialPose.Longitude, (float)geospatialPose.Altitude));
-                float rotationAccuracy = Quaternion.Angle(originalRotation, currentRotation);
+                float rotationAccuracy = Quaternion.Angle(originalRotation, geospatialPose.EunRotation);
 
                 Vector3 camPos = Camera.main.transform.position;
                 Quaternion camRot = Camera.main.transform.rotation;
 
-                /*positionSamples.Add(new PositionSample
+                positionSamples.Add(new PositionSample
                 {
                     objectName = prefabName,
                     originalPosition = originalPosition,
-                    currentPosition = new Vector3((float)geospatialPose.Latitude, (float)geospatialPose.Altitude, (float)geospatialPose.Longitude),
+                    currentPosition = geospatialPose,
                     positionAcc = positionAccuracy,
                     rotationAcc = rotationAccuracy,
                     originalRotation = originalRotation,
@@ -467,20 +467,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
                     timestamp = DateTime.UtcNow,
                     cameraPosition = camPos,
                     cameraRotation = camRot
-                });*/
-                Vector3 currentPosition = new Vector3((float)geospatialPose.Latitude, (float)geospatialPose.Altitude, (float)geospatialPose.Longitude);
-
-                SaveObjectPosition(
-                    prefabName,
-                    originalPosition,
-                    currentPosition,
-                    positionAccuracy,
-                    rotationAccuracy,
-                    originalRotation,
-                    currentRotation,
-                    camPos,
-                    camRot
-                );
+                });
 
                 positionsText.text = $"Closest object: {prefabName}\n";
                 positionsText.text += $"Original Position: Lat={originalPosition.x}, Lon={originalPosition.y}, Alt={originalPosition.z}\n";
@@ -489,6 +476,37 @@ public class GeospatialObjectPlacer : MonoBehaviour
                 positionsText.text += $"Current Rotation (Eun): {currentRotation.eulerAngles}\n";
                 positionsText.text += $"Accuracy Difference: {positionAccuracy:F2} meters\n";
                 positionsText.text += $"Rotation Difference: {rotationAccuracy:F2} degrees\n";
+
+                // Firestore speichern
+                string uniqueName = $"{prefabName}_{DateTime.UtcNow:yyyyMMdd_HHmmss_fff}";
+                var docRef = db.Collection(databaseSaving).Document(uniqueName);
+                Dictionary<string, object> data = new Dictionary<string, object>
+            {
+                { "name", uniqueName },
+                { "timestamp", DateTime.UtcNow.ToString("o") },
+                { "original-latitude", originalPosition.x },
+                { "original-longitude", originalPosition.y },
+                { "original-altitude", originalPosition.z },
+                { "current-latitude", geospatialPose.Latitude },
+                { "current-longitude", geospatialPose.Longitude },
+                { "current-altitude", geospatialPose.Altitude },
+                { "original-rotation-x", originalRotation.eulerAngles.x },
+                { "original-rotation-y", originalRotation.eulerAngles.y },
+                { "original-rotation-z", originalRotation.eulerAngles.z },
+                { "current-rotation-x", currentRotation.eulerAngles.x },
+                { "current-rotation-y", currentRotation.eulerAngles.y },
+                { "current-rotation-z", currentRotation.eulerAngles.z },
+                { "position-accuracy", positionAccuracy },
+                { "rotation-accuracy", rotationAccuracy },
+                { "camera-position-x", cameraPosition.x },
+                { "camera-position-y", cameraPosition.y },
+                { "camera-position-z", cameraPosition.z },
+                { "camera-geo-latitude", earthManager.CameraGeospatialPose.Latitude },
+        { "camera-geo-longitude", earthManager.CameraGeospatialPose.Longitude },
+        { "camera-geo-altitude", earthManager.CameraGeospatialPose.Altitude }
+            };
+
+                docRef.SetAsync(data);
             }
             else
             {
@@ -519,7 +537,7 @@ public class GeospatialObjectPlacer : MonoBehaviour
         positionSamples.Clear();
     }
 
-    public void SaveObjectPosition(string objectName, Vector3 originalPosition, Vector3 currentPosition, float positionAcc, float rotationAcc, Quaternion originalRotation, Quaternion currentRotation, Vector3 cameraPosition, Quaternion cameraRotation)
+    public void SaveObjectPosition(string objectName, Vector3 originalPosition, GeospatialPose currentPosition, float positionAcc, float rotationAcc, Quaternion originalRotation, Quaternion currentRotation, Vector3 cameraPosition, Quaternion cameraRotation)
     {
         if (db == null)
         {
@@ -541,9 +559,9 @@ public class GeospatialObjectPlacer : MonoBehaviour
             { "original-latitude", originalPosition.x },
             { "original-longitude", originalPosition.y },
             { "original-altitude", originalPosition.z },
-            { "current-latitude", currentPosition.x },
-            { "current-longitude", currentPosition.z },
-            { "current-altitude", currentPosition.y },
+            { "current-latitude", currentPosition.Latitude },
+            { "current-longitude", currentPosition.Longitude },
+            { "current-altitude", currentPosition.Altitude },
             { "position-accuracy", positionAcc },
             { "rotation-accuracy", rotationAcc },
             { "original-rotation-x", originalRotation.eulerAngles.x },
